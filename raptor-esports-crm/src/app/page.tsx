@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -21,9 +21,29 @@ export default function HomePage() {
   const router = useRouter()
   const { toast } = useToast()
 
+  // Show loading state while auth is initializing
+  const { loading } = useAuth()
+  
   // Redirect if already logged in
+  useEffect(() => {
+    if (user && !loading) {
+      router.push('/dashboard')
+    }
+  }, [user, loading, router])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+          <p className="mt-4 text-white">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render anything if user is logged in
   if (user) {
-    router.push('/dashboard')
     return null
   }
 
@@ -52,6 +72,7 @@ export default function HomePage() {
         router.push('/dashboard')
       }
     } catch (error) {
+      console.error('Auth error:', error)
       toast({
         title: "Error",
         description: "An unexpected error occurred.",

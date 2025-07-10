@@ -37,7 +37,7 @@ export class OCRService {
       const worker = await this.getWorker()
       
       const result = await worker.recognize(imageFile, {
-        progress: (p: any) => {
+        progress: (p: { progress: number }) => {
           if (onProgress) {
             onProgress(p.progress * 100)
           }

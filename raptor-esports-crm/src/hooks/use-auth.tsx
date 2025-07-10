@@ -22,10 +22,10 @@ interface AuthContextType {
   user: User | null
   profile: UserProfile | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error: any }>
-  signUp: (email: string, password: string, name: string) => Promise<{ error: any }>
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>
+  signUp: (email: string, password: string, name: string) => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
-  updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: any }>
+  updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: Error | null }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -36,8 +36,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let mounted = true
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return
       setUser(session?.user ?? null)
       if (session?.user) {
         fetchProfile(session.user.id)
@@ -49,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return
         setUser(session?.user ?? null)
         if (session?.user) {
           await fetchProfile(session.user.id)
@@ -59,7 +63,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const fetchProfile = async (userId: string) => {
@@ -86,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       password,
     })
-    return { error }
+    return { error: error as Error | null }
   }
 
   const signUp = async (email: string, password: string, name: string) => {
@@ -95,7 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
     })
 
-    if (error) return { error }
+    if (error) return { error: error as Error }
 
     if (data.user) {
       // Check if this is the first user (admin)
@@ -118,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (profileError) {
         console.error('Error creating profile:', profileError)
-        return { error: profileError }
+        return { error: profileError as Error }
       }
     }
 
@@ -141,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(prev => prev ? { ...prev, ...updates } : null)
     }
 
-    return { error }
+    return { error: error as Error | null }
   }
 
   const value = {

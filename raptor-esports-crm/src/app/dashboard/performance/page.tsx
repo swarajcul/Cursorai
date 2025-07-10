@@ -11,13 +11,13 @@ import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase'
 import { MAPS } from '@/lib/utils'
 import { OCRService, ParsedPerformanceData } from '@/lib/ocr-service'
-import { Upload, FileText, Plus } from 'lucide-react'
+import { Upload, Plus } from 'lucide-react'
 
 export default function PerformancePage() {
   const [isManualEntry, setIsManualEntry] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [ocrProgress, setOcrProgress] = useState(0)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+
   const [parsedData, setParsedData] = useState<ParsedPerformanceData[]>([])
   
   const { profile } = useAuth()
@@ -38,7 +38,7 @@ export default function PerformancePage() {
   const handleFileUpload = async (file: File) => {
     if (!file) return
 
-    setSelectedFile(file)
+
     setIsLoading(true)
     setOcrProgress(0)
 
@@ -53,6 +53,7 @@ export default function PerformancePage() {
         description: `Extracted data for ${data.length} players`,
       })
     } catch (error) {
+      console.error('OCR processing error:', error)
       toast({
         title: "OCR Processing Failed",
         description: "Failed to process the screenshot. Please try again.",
@@ -112,6 +113,7 @@ export default function PerformancePage() {
         survivalTime: ''
       })
     } catch (error) {
+      console.error('Performance data error:', error)
       toast({
         title: "Error",
         description: "Failed to add performance data. Please try again.",
@@ -160,8 +162,9 @@ export default function PerformancePage() {
       })
 
       setParsedData([])
-      setSelectedFile(null)
+
     } catch (error) {
+      console.error('OCR data error:', error)
       toast({
         title: "Error",
         description: "Failed to add OCR data. Please try again.",

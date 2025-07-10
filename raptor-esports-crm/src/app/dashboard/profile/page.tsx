@@ -1,16 +1,15 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase'
-import { ROLES } from '@/lib/utils'
 import { Upload, User, Save } from 'lucide-react'
+import { Loading } from '@/components/loading'
 
 export default function ProfilePage() {
   const { profile, updateProfile } = useAuth()
@@ -20,11 +19,23 @@ export default function ProfilePage() {
   const [isUploading, setIsUploading] = useState(false)
 
   const [formData, setFormData] = useState({
-    name: profile?.name || '',
-    contact_number: profile?.contact_number || '',
-    in_game_role: profile?.in_game_role || '',
-    device_info: profile?.device_info || '',
+    name: '',
+    contact_number: '',
+    in_game_role: '',
+    device_info: '',
   })
+
+  // Update form data when profile loads
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        name: profile.name || '',
+        contact_number: profile.contact_number || '',
+        in_game_role: profile.in_game_role || '',
+        device_info: profile.device_info || '',
+      })
+    }
+  }, [profile])
 
   const handleAvatarUpload = async (file: File) => {
     if (!profile) return
@@ -52,6 +63,7 @@ export default function ProfilePage() {
         description: "Avatar updated successfully!",
       })
     } catch (error) {
+      console.error('Avatar upload error:', error)
       toast({
         title: "Error",
         description: "Failed to upload avatar. Please try again.",
@@ -76,6 +88,7 @@ export default function ProfilePage() {
         description: "Profile updated successfully!",
       })
     } catch (error) {
+      console.error('Profile update error:', error)
       toast({
         title: "Error",
         description: "Failed to update profile. Please try again.",
@@ -87,14 +100,7 @@ export default function ProfilePage() {
   }
 
   if (!profile) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading profile...</p>
-        </div>
-      </div>
-    )
+    return <Loading />
   }
 
   return (

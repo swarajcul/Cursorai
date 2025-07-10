@@ -10,7 +10,8 @@ import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase'
 import { ROLES } from '@/lib/utils'
-import { Users, Plus, Trash2, Edit, UserPlus } from 'lucide-react'
+import { Plus, Trash2, Edit, UserPlus } from 'lucide-react'
+import { Loading } from '@/components/loading'
 
 interface User {
   id: string
@@ -37,7 +38,7 @@ export default function UserManagementPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [showCreateUser, setShowCreateUser] = useState(false)
   const [showCreateTeam, setShowCreateTeam] = useState(false)
-  const [editingUser, setEditingUser] = useState<User | null>(null)
+
 
   const [userForm, setUserForm] = useState({
     email: '',
@@ -69,6 +70,7 @@ export default function UserManagementPage() {
       if (error) throw error
       setUsers(data || [])
     } catch (error) {
+      console.error('Fetch users error:', error)
       toast({
         title: "Error",
         description: "Failed to fetch users",
@@ -87,6 +89,7 @@ export default function UserManagementPage() {
       if (error) throw error
       setTeams(data || [])
     } catch (error) {
+      console.error('Fetch teams error:', error)
       toast({
         title: "Error",
         description: "Failed to fetch teams",
@@ -142,6 +145,7 @@ export default function UserManagementPage() {
       setShowCreateUser(false)
       fetchUsers()
     } catch (error) {
+      console.error('Create user error:', error)
       toast({
         title: "Error",
         description: "Failed to create user",
@@ -172,6 +176,7 @@ export default function UserManagementPage() {
       setShowCreateTeam(false)
       fetchTeams()
     } catch (error) {
+      console.error('Create team error:', error)
       toast({
         title: "Error",
         description: "Failed to create team",
@@ -198,9 +203,10 @@ export default function UserManagementPage() {
         description: "User updated successfully!",
       })
 
-      setEditingUser(null)
+      
       fetchUsers()
     } catch (error) {
+      console.error('Update user error:', error)
       toast({
         title: "Error",
         description: "Failed to update user",
@@ -228,6 +234,7 @@ export default function UserManagementPage() {
 
       fetchUsers()
     } catch (error) {
+      console.error('Delete user error:', error)
       toast({
         title: "Error",
         description: "Failed to delete user",
@@ -250,14 +257,7 @@ export default function UserManagementPage() {
   }
 
   if (isLoading && users.length === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading users...</p>
-        </div>
-      </div>
-    )
+    return <Loading />
   }
 
   return (
